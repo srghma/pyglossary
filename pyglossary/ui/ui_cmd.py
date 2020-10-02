@@ -21,6 +21,8 @@
 from os.path import join
 import time
 
+from tqdm import tqdm
+
 from pyglossary.glossary import *
 from .base import *
 from . import progressbar as pb
@@ -159,6 +161,36 @@ class NullObj(object):
 		pass
 
 
+class MyTqdm(tqdm):
+	@property
+	def format_dict(self):
+		d = super(MyTqdm, self).format_dict
+		"""
+		return dict(
+			n=self.n, total=self.total,
+			elapsed=self._time() - self.start_t
+			if hasattr(self, 'start_t') else 0,
+			ncols=ncols, nrows=nrows,
+			prefix=self.desc, ascii=self.ascii, unit=self.unit,
+			unit_scale=self.unit_scale,
+			rate=1 / self.avg_time if self.avg_time else None,
+			bar_format=self.bar_format, postfix=self.postfix,
+			unit_divisor=self.unit_divisor, initial=self.initial,
+			colour=self.colour,
+		)
+		"""
+		d["bar_format"] = "{desc}: %{percentage:04.1f} |{bar}|[{elapsed}<{remaining}, {rate_fmt}{postfix}]"
+		"""
+		Possible vars:
+			l_bar, bar, r_bar, n, n_fmt, total, total_fmt,
+			percentage, elapsed, elapsed_s, ncols, nrows, desc, unit,
+			rate, rate_fmt, rate_noinv, rate_noinv_fmt,
+			rate_inv, rate_inv_fmt, postfix, unit_divisor,
+			remaining, remaining_s.
+		"""
+		return d
+
+
 class UI(UIBase):
 	def __init__(self):
 		UIBase.__init__(self)
@@ -186,7 +218,7 @@ class UI(UIBase):
 				return
 
 	def fillMessage(self, msg):
-		return wc_ljust(msg, self.pbar.term_width)
+		return "\r" + wc_ljust(msg, self.pbar.ncols)
 
 	def fixLogHandler(self, h):
 		def reset():
@@ -196,6 +228,11 @@ class UI(UIBase):
 		h.formatter.fill = self.fillMessage
 
 	def progressInit(self, title):
+		self.pbar = MyTqdm(
+			total=1.0,
+			desc=title,
+		)
+		"""
 		rot = pb.RotatingMarker()
 		self.pbar = pb.ProgressBar(
 			maxval=1.0,
@@ -211,13 +248,14 @@ class UI(UIBase):
 		]
 		self.pbar.start(num_intervals=1000)
 		rot.pbar = self.pbar
+		"""
 		self.fixLogger()
 
 	def progress(self, rat, text=""):
-		self.pbar.update(rat)
+		self.pbar.update(rat - self.pbar.n)
 
 	def progressEnd(self):
-		self.pbar.finish()
+		self.pbar.close()
 		if self._resetLogFormatter:
 			self._resetLogFormatter()
 
