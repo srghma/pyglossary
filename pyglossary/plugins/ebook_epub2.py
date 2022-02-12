@@ -18,8 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-
-from pyglossary.plugins.formats_common import *
+from pyglossary.option import *
+from pyglossary.flags import *
 from pyglossary.ebook_base import EbookWriter
 
 enable = True

@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from pyglossary.plugins.formats_common import *
+from pyglossary.option import *
 from pyglossary.entry import Entry
 from pyglossary.sort_keys import namedSortKeyByName
 from os import listdir
 from os.path import isfile
 from json import load
+import logging
+
 
 enable = True
 lname = "wordset"
@@ -24,11 +26,13 @@ optionsProp = {
 	"encoding": EncodingOption(),
 }
 
+log = logging.getLogger("pyglossary")
+
 
 class Reader(object):
 	_encoding: str = "utf-8"
 
-	def __init__(self, glos: GlossaryType):
+	def __init__(self, glos: "GlossaryType"):
 		self._glos = glos
 		self._clear()
 		self.defiTemplate = (

@@ -1,8 +1,16 @@
 # -*- coding: utf-8 -*-
+import os
+from os.path import (
+	join,
+)
 import re
+import logging
 
 from pyglossary.plugins.tabfile import Reader as TabfileReader
-from pyglossary.plugins.formats_common import *
+from pyglossary.flags import *
+
+
+log = logging.getLogger("pyglossary")
 
 lname = "dicformids"
 enable = True

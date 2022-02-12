@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from pyglossary.plugins.formats_common import *
+import logging
 import shutil
+from os.path import isfile, splitext
+from pyglossary.option import *
+from pyglossary.core import cacheDir
 
 enable = True
 lname = "aard2_slob"
@@ -50,6 +53,8 @@ extraDocs = [
 ]
 
 file_size_check_every = 100
+
+log = logging.getLogger("pyglossary")
 
 
 class Reader(object):
@@ -220,7 +225,7 @@ class Writer(object):
 		"pdf": "application/pdf",
 	}
 
-	def __init__(self, glos: GlossaryType) -> None:
+	def __init__(self, glos: "GlossaryType") -> None:
 		self._glos = glos
 		self._filename = None
 		self._resPrefix = ""

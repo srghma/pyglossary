@@ -6,6 +6,11 @@ from os.path import (
 	dirname,
 	getsize,
 	realpath,
+	splitext,
+	join,
+	split,
+	isfile,
+	isdir,
 )
 import re
 import gzip
@@ -18,7 +23,12 @@ from pyglossary.text_utils import (
 	uint32FromBytes,
 )
 
-from pyglossary.plugins.formats_common import *
+import logging
+from pyglossary.option import *
+from pyglossary.flags import *
+
+
+log = logging.getLogger("pyglossary")
 
 enable = True
 lname = "stardict"
@@ -109,7 +119,7 @@ class Reader(object):
 	_xdxf_to_html = True
 	_unicode_errors = "strict"
 
-	def __init__(self, glos: GlossaryType):
+	def __init__(self, glos: "GlossaryType"):
 
 		self._glos = glos
 		self.clear()
@@ -473,7 +483,7 @@ class Writer(object):
 	_audio_goldendict: bool = False
 	_audio_icon: bool = True
 
-	def __init__(self, glos: GlossaryType):
+	def __init__(self, glos: "GlossaryType"):
 		self._glos = glos
 		self._filename = None
 		self._resDir = None

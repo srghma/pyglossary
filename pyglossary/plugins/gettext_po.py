@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from pyglossary.plugins.formats_common import *
+from pyglossary.option import *
 
 enable = True
 lname = "gettext_po"
@@ -25,7 +25,7 @@ class Reader(object):
 		"polib": "polib",
 	}
 
-	def __init__(self, glos: GlossaryType):
+	def __init__(self, glos: "GlossaryType"):
 		self._glos = glos
 		self.clear()
 
@@ -112,7 +112,7 @@ class Writer(object):
 
 	_resources: bool = True
 
-	def __init__(self, glos: GlossaryType):
+	def __init__(self, glos: "GlossaryType"):
 		self._glos = glos
 		self._filename = None
 		self._file = None

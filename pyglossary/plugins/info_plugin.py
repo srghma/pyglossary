@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from pyglossary.plugins.formats_common import *
+import logging
+from pyglossary.option import *
 
 enable = True
 lname = "info"
@@ -16,9 +17,11 @@ website = None
 # key is option/argument name, value is instance of Option
 optionsProp = {}
 
+log = logging.getLogger("pyglossary")
+
 
 class Writer(object):
-	def __init__(self, glos: GlossaryType):
+	def __init__(self, glos: "GlossaryType"):
 		self._glos = glos
 		self._filename = None
 		self._file = None
@@ -143,7 +146,7 @@ class Writer(object):
 
 
 class Reader(object):
-	def __init__(self, glos: GlossaryType):
+	def __init__(self, glos: "GlossaryType"):
 		self._glos = glos
 
 	def close(self) -> None:

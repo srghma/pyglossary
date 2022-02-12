@@ -21,12 +21,12 @@
 import sys
 import os
 from os.path import abspath, basename
-
 import re
 import pkgutil
 import shutil
+import logging
 
-from pyglossary.plugins.formats_common import *
+from pyglossary.option import *
 from ._dict import *
 from ._content import prepare_content
 
@@ -80,6 +80,8 @@ extraDocs = [
 
 
 BeautifulSoup = None
+
+log = logging.getLogger("pyglossary")
 
 
 def loadBeautifulSoup():
@@ -209,7 +211,7 @@ class Writer(object):
 	_jing: bool = False
 	_indexes: str = ""  # FIXME: rename to indexes_lang?
 
-	def __init__(self, glos: GlossaryType) -> None:
+	def __init__(self, glos: "GlossaryType") -> None:
 		self._glos = glos
 		self._dirname = None
 

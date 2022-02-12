@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-from pyglossary.plugins.formats_common import *
+import os
 from io import BytesIO
 import re
 import html
+from pyglossary.compression import stdCompressions, compressionOpen
 
 enable = True
 lname = "jmdict"
@@ -257,7 +258,7 @@ class Reader(object):
 		# TODO: self.set_info("edition", ...)
 		self.setCreationTime(header)
 
-	def __init__(self, glos: GlossaryType):
+	def __init__(self, glos: "GlossaryType"):
 		self._glos = glos
 		self._wordCount = 0
 		self._filename = ""

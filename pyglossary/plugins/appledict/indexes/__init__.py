@@ -20,8 +20,9 @@ extended indexes generation with respect to source language.
 
 import os
 import pkgutil
+import logging
 
-from pyglossary.plugins.formats_common import log
+log = logging.getLogger("pyglossary")
 
 __all__ = ["languages", "log"]
 

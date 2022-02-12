@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from pyglossary.plugins.formats_common import *
+from pyglossary.option import *
+from pyglossary.compression import stdCompressions
 
 enable = True
 lname = "json"
@@ -33,7 +34,7 @@ class Writer(object):
 
 	compressions = stdCompressions
 
-	def __init__(self, glos: GlossaryType) -> None:
+	def __init__(self, glos: "GlossaryType") -> None:
 		self._glos = glos
 		self._filename = None
 		glos.preventDuplicateWords()
