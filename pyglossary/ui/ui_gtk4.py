@@ -301,16 +301,20 @@ class FormatOptionsDialog(gtk.Dialog):
 
 	def __init__(
 		self,
+		app,
 		formatName: str,
 		options: "List[str]",
 		optionsValues: "Dict[str, Any]",
 		**kwargs,
 	):
+		self.app = app
 		gtk.Dialog.__init__(self, **kwargs)
 		self.vbox = self.get_content_area()
 		##
 		optionsProp = Glossary.plugins[formatName].optionsProp
 		self.optionsProp = optionsProp
+		self.formatName = formatName
+		self.actionIds = set()
 		##
 		self.connect("response", lambda w, e: self.hide())
 		dialog_add_button(
@@ -445,7 +449,7 @@ class FormatOptionsDialog(gtk.Dialog):
 			return self.valueCellClicked(path)
 		return False
 
-	def valueItemActivate(self, item: "gtk.MenuItem", itr: gtk.TreeIter):
+	def valueItemActivate(self, item: "gio.MenuItem", itr: gtk.TreeIter):
 		# value is column 3
 		value = item.get_label()
 		model = self.treev.get_model()
@@ -491,10 +495,19 @@ class FormatOptionsDialog(gtk.Dialog):
 		model.set_value(itr, self.valueCol, value)
 		model.set_value(itr, 0, True)  # enable it
 
-	def valueItemCustomActivate(self, item: "gtk.MenuItem", itr: gtk.TreeIter):
+	def valueItemCustomActivate(self, item: "gio.MenuItem", itr: gtk.TreeIter):
 		model = self.treev.get_model()
 		optName = model.get_value(itr, 1)
 		self.valueCustomOpenDialog(itr, optName)
+
+	def addAction(self, path, name, callback, *args) -> str:
+		actionId = self.formatName + "_" + str(path[0]) + "_" + name
+		if actionId not in self.actionIds:
+			action = gio.SimpleAction(name=actionId)
+			action.connect("activate", callback, *args)
+			self.app.add_action(action)
+
+		return "app." + actionId
 
 	def valueCellClicked(self, path, forceMenu=False) -> bool:
 		"""
@@ -524,39 +537,53 @@ class FormatOptionsDialog(gtk.Dialog):
 			else:
 				return False
 		menu = gtk.PopoverMenu()
+		menu.set_parent(self)
 		menuM = menu.get_menu_model()  # gio.MenuModel
 		if prop.customValue:
-			item = gtk.MenuItem("[Custom Value]")
-			item.connect("activate", self.valueItemCustomActivate, itr)
-			item.show()
-			menuM.append(item)
+			item = gio.MenuItem()
+			item.set_label("[Custom Value]")
+			item.set_detailed_action(self.addAction(
+				path,
+				"__custom__",
+				self.valueItemCustomActivate, itr,
+			))
+			menuM.append_item(item)
 		groupedValues = None
 		if len(propValues) > 10:
 			groupedValues = prop.groupValues()
 		if groupedValues:
 			for groupName, values in groupedValues.items():
-				item = gtk.MenuItem()
+				item = gio.MenuItem()
 				item.set_label(groupName)
 				if values is None:
-					item.connect("activate", self.valueItemActivate, itr)
+					item.set_detailed_action(self.addAction(
+						path,
+						groupName,
+						self.valueItemActivat, itr,
+					))
 				else:
-					subMenu = gtk.PopoverMenu()
+					subMenu = gio.Menu()
 					for subValue in values:
-						subItem = gtk.MenuItem(label=str(subValue))
-						subItem.connect("activate", self.valueItemActivate, itr)
-						subItem.show()
-						subMenu.append(subItem)
+						subItem = gio.MenuItem()
+						subItem.set_label(str(subValue))
+						item.set_detailed_action(self.addAction(
+							path,
+							groupName,
+							self.valueItemActivate, itr
+						))
+						subMenu.append_item(subItem)
 					item.set_submenu(subMenu)
 				item.show()
-				menu.append(item)
+				menu.append_item(item)
 		else:
 			for value in propValues:
-				item = gtk.MenuItem(value)
+				item = gio.MenuItem()
+				item.set_label(value)
 				item.connect("activate", self.valueItemActivate, itr)
 				item.show()
-				menu.append(item)
-		etime = gtk.get_current_event_time()
-		menu.popup(None, None, None, None, 3, etime)
+				menu.append_item(item)
+		#etime = gtk.get_current_event_time()
+		menu.popup()
 		return True
 
 	def getOptionsValues(self):
@@ -577,7 +604,8 @@ class FormatOptionsDialog(gtk.Dialog):
 
 
 class FormatBox(FormatButton):
-	def __init__(self, descList: "List[str]", parent=None):
+	def __init__(self, app, descList: "List[str]", parent=None):
+		self.app = app
 		FormatButton.__init__(self, descList, parent=parent)
 
 		self.optionsValues = {}
@@ -608,6 +636,7 @@ class FormatBox(FormatButton):
 		formatName = self.getActive()
 		options = self.getActiveOptions()
 		dialog = FormatOptionsDialog(
+			self.app,
 			formatName,
 			options,
 			self.optionsValues,
@@ -668,8 +697,8 @@ class FormatBox(FormatButton):
 class InputFormatBox(FormatBox):
 	dialogTitle = "Select Input Format"
 
-	def __init__(self, **kwargs):
-		FormatBox.__init__(self, readDesc, **kwargs)
+	def __init__(self, app, **kwargs):
+		FormatBox.__init__(self, app, readDesc, **kwargs)
 
 	def kind(self):
 		"returns 'r' or 'w'"
@@ -685,8 +714,8 @@ class InputFormatBox(FormatBox):
 class OutputFormatBox(FormatBox):
 	dialogTitle = "Select Output Format"
 
-	def __init__(self, **kwargs):
-		FormatBox.__init__(self, writeDesc, **kwargs)
+	def __init__(self, app, **kwargs):
+		FormatBox.__init__(self, app, writeDesc, **kwargs)
 
 	def kind(self):
 		"returns 'r' or 'w'"
@@ -1147,7 +1176,7 @@ check {
 		pack(hbox, hbox.label)
 		labelSizeGroup.add_widget(hbox.label)
 		hbox.label.set_property("xalign", 0)
-		self.convertInputFormatCombo = InputFormatBox(parent=self)
+		self.convertInputFormatCombo = InputFormatBox(self.ui, parent=self)
 		buttonSizeGroup.add_widget(self.convertInputFormatCombo.optionsButton)
 		pack(hbox, self.convertInputFormatCombo)
 		pack(hbox, gtk.Label(), 1, 1)
@@ -1186,7 +1215,7 @@ check {
 		pack(hbox, hbox.label)
 		labelSizeGroup.add_widget(hbox.label)
 		hbox.label.set_property("xalign", 0)
-		self.convertOutputFormatCombo = OutputFormatBox(parent=self)
+		self.convertOutputFormatCombo = OutputFormatBox(self.ui, parent=self)
 		buttonSizeGroup.add_widget(self.convertOutputFormatCombo.optionsButton)
 		pack(hbox, self.convertOutputFormatCombo)
 		pack(hbox, gtk.Label(), 1, 1)
@@ -1231,7 +1260,7 @@ check {
 		pack(hbox, hbox.label)
 		labelSizeGroup.add_widget(hbox.label)
 		hbox.label.set_property("xalign", 0)
-		self.reverseInputFormatCombo = InputFormatBox()
+		self.reverseInputFormatCombo = InputFormatBox(self.ui)
 		pack(hbox, self.reverseInputFormatCombo)
 		pack(vbox, hbox)
 		###
